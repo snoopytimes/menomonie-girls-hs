@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Shape — Menomonie Mustangs 4-3-3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f0f; color: #f0ede6; font-family: 'DM Sans', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px 40px; }
+  h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.6rem,4vw,2.4rem); letter-spacing: .08em; color: #c8a84b; margin-bottom: 4px; }
+  .subtitle { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: #666; margin-bottom: 20px; }
+
+  /* Unit toggles */
+  .unit-selector { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; justify-content: center; }
+  .unit-btn { background: #1a1a1a; border: 1px solid #2a2a2a; color: #888; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: .12em; padding: 8px 20px; border-radius: 3px; cursor: pointer; transition: all .15s; }
+  .unit-btn:hover { border-color: #8f1a1a; color: #c8a84b; }
+  .unit-btn.active { background: #8f1a1a; border-color: #8f1a1a; color: #f0ede6; }
+
+  /* Zone + Lane selectors */
+  .selector-group { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; width: 100%; max-width: 480px; }
+  .selector-label { font-family: 'Bebas Neue', sans-serif; font-size: .82rem; letter-spacing: .1em; color: #555; white-space: nowrap; width: 42px; text-align: right; flex-shrink: 0; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tab { background: #1a1a1a; border: 1px solid #2a2a2a; color: #888; font-family: 'DM Sans', sans-serif; font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; padding: 7px 14px; border-radius: 3px; cursor: pointer; transition: all .18s; }
+  .tab:hover { border-color: #c8a84b; color: #c8a84b; }
+  .tab.active { background: #c8a84b; border-color: #c8a84b; color: #0f0f0f; }
+
+  /* Overlay toggles */
+  .overlay-toggles { display: flex; gap: 20px; margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
+  .lane-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #666; transition: color .15s; }
+  .lane-toggle:hover { color: #c8a84b; }
+  .lane-toggle input { display: none; }
+  .lane-toggle-track { width: 32px; height: 16px; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 8px; position: relative; transition: background .2s, border-color .2s; flex-shrink: 0; }
+  .lane-toggle-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: #555; transition: transform .2s, background .2s; }
+  .lane-toggle input:checked + .lane-toggle-track { background: #c8a84b22; border-color: #c8a84b; }
+  .lane-toggle input:checked + .lane-toggle-track::after { transform: translateX(16px); background: #c8a84b; }
+
+  .field-wrap { position: relative; width: 100%; max-width: 480px; }
+  svg.field { width: 100%; height: auto; display: block; border-radius: 4px; filter: drop-shadow(0 8px 32px rgba(0,0,0,.6)); touch-action: none; user-select: none; }
+  svg.field text { pointer-events: none; user-select: none; }
+  .draggable { cursor: grab; }
+  .draggable:active { cursor: grabbing; }
+
+  .legend { display: flex; gap: 14px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: .72rem; color: #888; letter-spacing: .06em; }
+  .legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+
+  .desc-box { max-width: 480px; width: 100%; margin-top: 16px; background: #161616; border: 1px solid #252525; border-left: 3px solid #c8a84b; border-radius: 3px; padding: 14px 16px; }
+  .desc-unit + .desc-unit { margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; }
+  .desc-unit h3 { font-family: 'Bebas Neue', sans-serif; font-size: .9rem; letter-spacing: .1em; color: #c8a84b; margin-bottom: 4px; }
+  .desc-unit p { font-size: .78rem; line-height: 1.65; color: #aaa; }
+  .desc-unit p strong { color: #f0ede6; }
+</style>
+</head>
+<body>
+
+<h1>Pressing &amp; Defensive Shape</h1>
+<p class="subtitle">Menomonie Mustangs · 4-3-3 · Sweeper / Libero System</p>
+
+<div class="unit-selector">
+  <button class="unit-btn active" onclick="toggleUnit('defense')">Defense</button>
+  <button class="unit-btn active" onclick="toggleUnit('midfield')">Midfield</button>
+  <button class="unit-btn active" onclick="toggleUnit('forwards')">Forwards</button>
+</div>
+
+<div class="selector-group">
+  <span class="selector-label">Zone</span>
+  <div class="tabs" id="zone-tabs">
+    <button class="tab" onclick="setZone('attacking')">Attacking</button>
+    <button class="tab" onclick="setZone('midfield')">Midfield</button>
+    <button class="tab active" onclick="setZone('defensive')">Defensive</button>
+  </div>
+</div>
+<div class="selector-group">
+  <span class="selector-label">Lane</span>
+  <div class="tabs" id="lane-tabs">
+    <button class="tab" onclick="setBall('left')">Wide Left</button>
+    <button class="tab" onclick="setBall('left-center')">Left Central</button>
+    <button class="tab" onclick="setBall('center')">Central</button>
+    <button class="tab" onclick="setBall('right-center')">Right Central</button>
+    <button class="tab active" onclick="setBall('right')">Wide Right</button>
+  </div>
+</div>
+
+<div class="overlay-toggles">
+  <label class="lane-toggle">
+    <input type="checkbox" onchange="toggleOverlay('lane-overlay', this.checked)">
+    <span class="lane-toggle-track"></span>
+    Field Lanes
+  </label>
+  <label class="lane-toggle">
+    <input type="checkbox" onchange="toggleOverlay('zone-overlay', this.checked)">
+    <span class="lane-toggle-track"></span>
+    Field Zones
+  </label>
+</div>
+
+<div class="field-wrap">
+<svg class="field" viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Stripes -->
+  <rect width="300" height="420" fill="#2d5a1b"/>
+  <rect x="0" y="0"   width="300" height="35" fill="#2a5519" opacity=".5"/>
+  <rect x="0" y="70"  width="300" height="35" fill="#2a5519" opacity=".5"/>
+  <rect x="0" y="140" width="300" height="35" fill="#2a5519" opacity=".5"/>
+  <rect x="0" y="210" width="300" height="35" fill="#2a5519" opacity=".5"/>
+  <rect x="0" y="280" width="300" height="35" fill="#2a5519" opacity=".5"/>
+  <rect x="0" y="350" width="300" height="35" fill="#2a5519" opacity=".5"/>
+
+  <!-- Lane overlay -->
+  <g id="lane-overlay" display="none">
+    <rect x="10"  y="10" width="56" height="400" fill="rgba(100,160,255,.13)"/>
+    <line x1="66"  y1="10" x2="66"  y2="410" stroke="rgba(255,255,255,.25)" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="38"  y="24" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="7.5" fill="rgba(255,255,255,.45)" letter-spacing=".05em">Wide L</text>
+    <rect x="66"  y="10" width="56" height="400" fill="rgba(200,168,75,.10)"/>
+    <line x1="122" y1="10" x2="122" y2="410" stroke="rgba(255,255,255,.25)" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="94"  y="24" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="7.5" fill="rgba(200,168,75,.6)" letter-spacing=".05em">L Half</text>
+    <rect x="122" y="10" width="56" height="400" fill="rgba(255,255,255,.05)"/>
+    <line x1="178" y1="10" x2="178" y2="410" stroke="rgba(255,255,255,.25)" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="150" y="24" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="7.5" fill="rgba(255,255,255,.45)" letter-spacing=".05em">Central</text>
+    <rect x="178" y="10" width="56" height="400" fill="rgba(200,168,75,.10)"/>
+    <line x1="234" y1="10" x2="234" y2="410" stroke="rgba(255,255,255,.25)" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="206" y="24" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="7.5" fill="rgba(200,168,75,.6)" letter-spacing=".05em">R Half</text>
+    <rect x="234" y="10" width="56" height="400" fill="rgba(100,160,255,.13)"/>
+    <text x="262" y="24" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="7.5" fill="rgba(255,255,255,.45)" letter-spacing=".05em">Wide R</text>
+  </g>
+
+  <!-- Zone overlay — attacking y10–143, midfield y143–277, defensive y277–410 -->
+  <g id="zone-overlay" display="none">
+    <rect x="10" y="10"  width="280" height="133" fill="rgba(200,168,75,.10)"/>
+    <rect x="10" y="143" width="280" height="134" fill="rgba(255,255,255,.04)"/>
+    <rect x="10" y="277" width="280" height="133" fill="rgba(143,26,26,.12)"/>
+    <line x1="10" y1="143" x2="290" y2="143" stroke="rgba(255,255,255,.35)" stroke-width="1.2" stroke-dasharray="6 4"/>
+    <line x1="10" y1="277" x2="290" y2="277" stroke="rgba(255,255,255,.35)" stroke-width="1.2" stroke-dasharray="6 4"/>
+    <text x="18" y="128" font-family="Bebas Neue,sans-serif" font-size="8" fill="rgba(200,168,75,.7)"  letter-spacing=".08em">Attacking</text>
+    <text x="18" y="270" font-family="Bebas Neue,sans-serif" font-size="8" fill="rgba(255,255,255,.4)" letter-spacing=".08em">Midfield</text>
+    <text x="18" y="405" font-family="Bebas Neue,sans-serif" font-size="8" fill="rgba(200,80,80,.7)"   letter-spacing=".08em">Defensive</text>
+  </g>
+
+  <!-- Pitch markings -->
+  <rect x="10" y="10" width="280" height="400" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
+  <line x1="10" y1="210" x2="290" y2="210" stroke="rgba(255,255,255,.4)" stroke-width="1"/>
+  <circle cx="150" cy="210" r="40" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+  <circle cx="150" cy="210" r="2" fill="rgba(255,255,255,.4)"/>
+  <rect x="72" y="10" width="156" height="55" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/>
+  <rect x="114" y="10" width="72" height="22" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+  <circle cx="150" cy="47" r="1.5" fill="rgba(255,255,255,.4)"/>
+  <rect x="126" y="6" width="48" height="8" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
+  <rect x="72" y="355" width="156" height="55" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/>
+  <rect x="114" y="388" width="72" height="22" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+  <circle cx="150" cy="373" r="1.5" fill="rgba(255,255,255,.4)"/>
+  <rect x="126" y="406" width="48" height="8" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
+
+  <defs>
+    <marker id="arrow-gold" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#c8a84b"/>
+    </marker>
+  </defs>
+
+  <!-- Shape lines -->
+  <g id="def-lines">
+    <line id="dl-1" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,255,255,.22)" stroke-width="1.2" stroke-dasharray="5 4"/>
+    <line id="dl-2" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,255,255,.22)" stroke-width="1.2" stroke-dasharray="5 4"/>
+    <line id="dl-3" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,255,255,.14)" stroke-width="1"   stroke-dasharray="3 5"/>
+    <line id="dl-4" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,255,255,.14)" stroke-width="1"   stroke-dasharray="3 5"/>
+    <line id="dl-5" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,255,255,.14)" stroke-width="1"   stroke-dasharray="3 5"/>
+  </g>
+  <g id="mid-lines">
+    <line id="ml-1" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,255,255,.22)" stroke-width="1.2" stroke-dasharray="5 4"/>
+    <line id="ml-2" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,255,255,.22)" stroke-width="1.2" stroke-dasharray="5 4"/>
+  </g>
+  <g id="fwd-lines">
+    <line id="fl-1" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,255,255,.22)" stroke-width="1.2" stroke-dasharray="5 4"/>
+    <line id="fl-2" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,255,255,.22)" stroke-width="1.2" stroke-dasharray="5 4"/>
+  </g>
+
+  <!-- Press arrows -->
+  <line id="press-d" x1="0" y1="0" x2="0" y2="0" stroke="#c8a84b" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arrow-gold)" opacity=".85"/>
+  <line id="press-m" x1="0" y1="0" x2="0" y2="0" stroke="#c8a84b" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arrow-gold)" opacity=".85"/>
+  <line id="press-f" x1="0" y1="0" x2="0" y2="0" stroke="#c8a84b" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arrow-gold)" opacity=".85"/>
+
+  <!-- Ball + attacker -->
+  <circle id="att-ring" cx="28" cy="95" r="14" fill="none" stroke="#e05c5c" stroke-width="1.5" stroke-dasharray="3 2" opacity=".6"/>
+  <circle id="ball"       cx="28" cy="95" r="7"   fill="#f5f0e0" stroke="#c8a84b" stroke-width="2" class="draggable" data-drag="ball"/>
+  <circle id="ball-inner" cx="28" cy="95" r="2.5" fill="#c8a84b" opacity=".7"/>
+  <circle id="att"    cx="28" cy="95" r="10" fill="rgba(224,92,92,.85)" stroke="rgba(255,255,255,.7)" stroke-width="1.5" class="draggable" data-drag="ball"/>
+  <text id="att-lbl" x="28" y="98.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="7.5" font-weight="700" fill="white">ATT</text>
+
+  <!-- Defense -->
+  <g id="grp-dA"><circle id="dA-shadow" cx="46" cy="293" r="14" fill="rgba(0,0,0,.3)"/><circle id="dA" cx="45" cy="292" r="12" fill="#1a3a8f" stroke="white" stroke-width="2" class="draggable" data-drag="dA"/><text id="dA-lbl" x="45" y="295.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" font-weight="600" fill="white">LB</text></g>
+  <g id="grp-dB"><circle id="dB-shadow" cx="113" cy="298" r="14" fill="rgba(0,0,0,.3)"/><circle id="dB" cx="112" cy="297" r="12" fill="#8f1a1a" stroke="#c8a84b" stroke-width="2.5" class="draggable" data-drag="dB"/><text id="dB-lbl" x="112" y="300.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="7.5" font-weight="700" fill="white">STP</text></g>
+  <g id="grp-dC"><circle id="dC-shadow" cx="209" cy="305" r="14" fill="rgba(0,0,0,.3)"/><circle id="dC" cx="208" cy="304" r="12" fill="#1a3a8f" stroke="white" stroke-width="2" class="draggable" data-drag="dC"/><text id="dC-lbl" x="208" y="307.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" font-weight="600" fill="white">RB</text></g>
+  <g id="grp-dD"><circle id="dD-shadow" cx="146" cy="341" r="14" fill="rgba(0,0,0,.3)"/><circle id="dD" cx="145" cy="340" r="12" fill="#1a5c3a" stroke="rgba(255,255,255,.9)" stroke-width="2" class="draggable" data-drag="dD"/><text id="dD-lbl" x="145" y="343.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="7" font-weight="700" fill="white">LIB</text></g>
+
+  <!-- Midfield -->
+  <g id="grp-mA" style="display:none"><circle id="mA-shadow" cx="63" cy="216" r="14" fill="rgba(0,0,0,.3)"/><circle id="mA" cx="62" cy="215" r="12" fill="#1a3a8f" stroke="white" stroke-width="2" class="draggable" data-drag="mA"/><text id="mA-lbl" x="62" y="218.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="7" font-weight="600" fill="white">CM-L</text></g>
+  <g id="grp-mB" style="display:none"><circle id="mB-shadow" cx="149" cy="226" r="14" fill="rgba(0,0,0,.3)"/><circle id="mB" cx="148" cy="225" r="12" fill="#1a3a8f" stroke="white" stroke-width="2" class="draggable" data-drag="mB"/><text id="mB-lbl" x="148" y="228.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="7" font-weight="600" fill="white">CM-C</text></g>
+  <g id="grp-mC" style="display:none"><circle id="mC-shadow" cx="229" cy="233" r="14" fill="rgba(0,0,0,.3)"/><circle id="mC" cx="228" cy="232" r="12" fill="#1a3a8f" stroke="white" stroke-width="2" class="draggable" data-drag="mC"/><text id="mC-lbl" x="228" y="235.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="7" font-weight="600" fill="white">CM-R</text></g>
+
+  <!-- Forwards -->
+  <g id="grp-fA" style="display:none"><circle id="fA-shadow" cx="46" cy="79" r="14" fill="rgba(0,0,0,.3)"/><circle id="fA" cx="45" cy="78" r="12" fill="#b8860b" stroke="#c8a84b" stroke-width="2" class="draggable" data-drag="fA"/><text id="fA-lbl" x="45" y="81.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" font-weight="600" fill="white">LW</text></g>
+  <g id="grp-fB" style="display:none"><circle id="fB-shadow" cx="131" cy="99" r="14" fill="rgba(0,0,0,.3)"/><circle id="fB" cx="130" cy="98" r="12" fill="#b8860b" stroke="#c8a84b" stroke-width="2" class="draggable" data-drag="fB"/><text id="fB-lbl" x="130" y="101.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" font-weight="600" fill="white">ST</text></g>
+  <g id="grp-fC" style="display:none"><circle id="fC-shadow" cx="219" cy="111" r="14" fill="rgba(0,0,0,.3)"/><circle id="fC" cx="218" cy="110" r="12" fill="#b8860b" stroke="#c8a84b" stroke-width="2" class="draggable" data-drag="fC"/><text id="fC-lbl" x="218" y="113.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" font-weight="600" fill="white">RW</text></g>
+
+</svg>
+</div>
+
+<div class="legend" id="legend"></div>
+<div class="desc-box" id="desc-box"></div>
+
+<script>
+// ── BALL POSITIONS ─────────────────────────────────────────────────────────────
+const BALL_POS = {
+  attacking: {
+    'left':          {x:28,  y:65},'left-center':   {x:90,  y:70},
+    'center':        {x:150, y:80}, 
+    'right-center':  {x:210, y:70},'right':         {x:272, y:65 }
+  },
+  midfield: {
+    'left':          {x:28,  y:200}, 'left-center': {x:90,  y:210},
+    'center':        {x:150, y:205}, 'right-center':{x:210, y:210}, 'right':{x:272, y:200}
+  },
+  defensive: {
+    'left':          {x:28,  y:300}, 'left-center': {x:90,  y:300},
+    'center':        {x:150, y:300}, 'right-center':{x:210, y:300}, 'right':{x:272, y:300}
+  }
+};
+
+// ── DEFENSE POSITIONS ──────────────────────────────────────────────────────────
+const DEF_POS = {
+  attacking: {
+    'left':          {dA:{x:45,  y:210},dB:{x:100,y:200},dC:{x:160,y:210},dD:{x:100,y:250},pressFrom:'dA'},
+    'left-center':   {dA:{x:60,  y:210},dB:{x:110,y:200},dC:{x:160,y:210},dD:{x:110,y:250},pressFrom:'dB'},
+    'center':        {dA:{x:90,  y:210},dB:{x:150,y:210},dC:{x:210,y:210},dD:{x:150,y:250},pressFrom:'dB'},
+    'right-center':  {dA:{x:145, y:210},dB:{x:200,y:200},dC:{x:240,y:210},dD:{x:200,y:250},pressFrom:'dB'},
+    'right':         {dA:{x:155,  y:210},dB:{x:210,y:200},dC:{x:255,y:210},dD:{x:210,y:250},pressFrom:'dC'}
+  },
+  midfield: {
+    'left':          {dA:{x:35, y:280},dB:{x:90,y:290},dC:{x:160,y:320},dD:{x:70,y:325},pressFrom:'dA'},
+    'left-center':   {dA:{x:58, y:295},dB:{x:105,y:285},dC:{x:180,y:290},dD:{x:110,y:320},pressFrom:'dB'},
+    'center':        {dA:{x:90, y:290},dB:{x:150,y:285},dC:{x:205,y:290},dD:{x:150,y:320},pressFrom:'dB'},
+    'right-center':  {dA:{x:130, y:295},dB:{x:200,y:280},dC:{x:250,y:290},dD:{x:200,y:320},pressFrom:'dB'},
+    'right':         {dA:{x:150, y:320},dB:{x:210,y:285},dC:{x:270,y:260},dD:{x:225,y:320},pressFrom:'dC'}
+  },
+  defensive: {
+    'left':          {dA:{x:60, y:355},dB:{x:90,y:355},dC:{x:150,y:375},dD:{x:90,y:385},pressFrom:'dA'},
+    'left-center':   {dA:{x:70, y:360},dB:{x:100,y:350},dC:{x:155,y:375},dD:{x:115,y:375},pressFrom:'dB'},
+    'center':        {dA:{x:120, y:360},dB:{x:150,y:350},dC:{x:180,y:360},dD:{x:150,y:380},pressFrom:'dB'},
+    'right-center':  {dA:{x:140, y:375},dB:{x:205,y:350},dC:{x:240,y:360},dD:{x:200,y:380},pressFrom:'dB'},
+    'right':         {dA:{x:150, y:375},dB:{x:220,y:355},dC:{x:260,y:335},dD:{x:230,y:385},pressFrom:'dC'}
+  }
+};
+
+// ── MIDFIELD POSITIONS ─────────────────────────────────────────────────────────
+const MID_POS = {
+  attacking: {
+    'left':          {mA:{x:95,  y:125},mB:{x:120,y:170},mC:{x:170,y:170},pressFrom:'mA'},
+    'left-center':   {mA:{x:90,  y:130},mB:{x:125,y:170},mC:{x:180,y:170},pressFrom:'mA'},
+    'center':        {mA:{x:105, y:145},mB:{x:150,y:170},mC:{x:195,y:145},pressFrom:'mB'},
+    'right-center':  {mA:{x:120, y:170},mB:{x:175,y:170},mC:{x:210,y:130},pressFrom:'mC'},
+    'right':         {mA:{x:130,  y:170},mB:{x:180,y:170},mC:{x:210,y:125},pressFrom:'mC'}
+  },
+  midfield: {
+    'left':          {mA:{x:60, y:250},mB:{x:138,y:268},mC:{x:205,y:275},pressFrom:'mA'},
+    'left-center':   {mA:{x:72, y:250},mB:{x:135,y:260},mC:{x:210,y:250},pressFrom:'mA'},
+    'center':        {mA:{x:90, y:230},mB:{x:150,y:250},mC:{x:205,y:228},pressFrom:'mB'},
+    'right-center':  {mA:{x:90, y:245},mB:{x:165,y:255},mC:{x:228,y:250},pressFrom:'mC'},
+    'right':         {mA:{x:110, y:260},mB:{x:180,y:255},mC:{x:228,y:240},pressFrom:'mC'}
+  },
+  defensive: {
+    'left':          {mA:{x:70, y:330},mB:{x:130,y:335},mC:{x:180,y:345},pressFrom:'mA'},
+    'left-center':   {mA:{x:110, y:335},mB:{x:130,y:350},mC:{x:170,y:345},pressFrom:'mA'},
+    'center':        {mA:{x:100, y:335},mB:{x:135,y:340},mC:{x:195,y:335},pressFrom:'mB'},
+    'right-center':  {mA:{x:125, y:345},mB:{x:175,y:345},mC:{x:228,y:330},pressFrom:'mC'},
+    'right':         {mA:{x:140, y:335},mB:{x:200,y:335},mC:{x:240,y:320},pressFrom:'mC'}
+  }
+};
+
+// ── FORWARD POSITIONS ──────────────────────────────────────────────────────────
+const FWD_POS = {
+  attacking: {
+    'left':          {fA:{x:40, y:120 },fB:{x:110,y:68 },fC:{x:158,y:120},pressFrom:'fA'},
+    'left-center':   {fA:{x:50, y:120 },fB:{x:135,y:85 },fC:{x:190,y:104},pressFrom:'fA'},
+    'center':        {fA:{x:72, y:108},fB:{x:150,y:120 },fC:{x:228,y:108},pressFrom:'fB'},
+    'right-center':  {fA:{x:95, y:110},fB:{x:165,y:84 },fC:{x:255,y:110 },pressFrom:'fC'},
+    'right':         {fA:{x:125, y:120},fB:{x:190,y:68 },fC:{x:260,y:120 },pressFrom:'fC'}
+  },
+  midfield: {
+    'left':          {fA:{x:42, y:178},fB:{x:110,y:150},fC:{x:195,y:182},pressFrom:'fA'},
+    'left-center':   {fA:{x:65, y:178},fB:{x:135,y:155},fC:{x:225,y:202},pressFrom:'fA'},
+    'center':        {fA:{x:85, y:178},fB:{x:150,y:140},fC:{x:220,y:178},pressFrom:'fB'},
+    'right-center':  {fA:{x:75, y:202},fB:{x:165,y:175},fC:{x:235,y:178},pressFrom:'fC'},
+    'right':         {fA:{x:85, y:190},fB:{x:165,y:150},fC:{x:225,y:168},pressFrom:'fC'}
+  },
+  defensive: {
+    'left':          {fA:{x:50, y:270},fB:{x:120,y:250},fC:{x:210,y:298},pressFrom:'fA'},
+    'left-center':   {fA:{x:50, y:280},fB:{x:140,y:245},fC:{x:225,y:310},pressFrom:'fA'},
+    'center':        {fA:{x:72, y:290},fB:{x:150,y:245},fC:{x:228,y:290},pressFrom:'fB'},
+    'right-center':  {fA:{x:75, y:298},fB:{x:160,y:255},fC:{x:232,y:280},pressFrom:'fC'},
+    'right':         {fA:{x:80, y:290},fB:{x:160,y:250},fC:{x:248,y:270},pressFrom:'fC'}
+  }
+};
+
+// ── DESCRIPTIONS ───────────────────────────────────────────────────────────────
+const DESCRIPTIONS = {
+  defense: {
+    attacking: {
+      'left':         '<strong>LB closes the ball</strong> high in the opponent\'s half. Stopper shifts left — second defender, covering the inside. RB pinches in. <strong>Libero holds central behind all three.</strong> Cue: <strong>"Ball near, squeeze in. Libero — hold center."</strong>',
+      'left-center':  '<strong>Stopper steps to pressure</strong> in the left channel. LB holds her width. RB tucks in. <strong>Libero covers centrally behind the stopper.</strong> Cue: <strong>"Stopper stepping — Libero cover."</strong>',
+      'center':       '<strong>Stopper steps straight up, central.</strong> LB and RB hold their width. <strong>Libero sits directly behind, central.</strong> Cue: <strong>"Everyone in their lane."</strong>',
+      'right-center': '<strong>Stopper steps to pressure</strong> in the right channel. RB holds her width. LB tucks in. <strong>Libero covers centrally behind the stopper.</strong> Cue: <strong>"Stopper stepping — Libero cover."</strong>',
+      'right':        '<strong>RB closes the ball</strong> high in the opponent\'s half. Stopper shifts right — second defender. LB pinches in. <strong>Libero holds central behind all three.</strong> Cue: <strong>"Ball near, squeeze in. Libero — hold center."</strong>'
+    },
+    midfield: {
+      'left':         '<strong>LB pushes up to close the ball wide</strong> in the middle third. Stopper shifts left — second defender. RB tucks in. <strong>Libero holds central behind the three.</strong> Cue: <strong>"Push up and hold shape. Libero — read the space."</strong>',
+      'left-center':  '<strong>Stopper steps to pressure</strong> in the left-central midfield channel. LB holds width. RB compresses. <strong>Libero sits centrally behind the stopper.</strong> Cue: <strong>"Stopper on it — Libero cover behind."</strong>',
+      'center':       '<strong>Stopper steps to contest centrally</strong> in midfield. LB and RB hold their width. <strong>Libero holds directly behind, central.</strong> Cue: <strong>"Hold the diamond — everyone in their lane."</strong>',
+      'right-center': '<strong>Stopper steps to pressure</strong> in the right-central midfield channel. RB holds width. LB compresses. <strong>Libero sits centrally behind the stopper.</strong> Cue: <strong>"Stopper on it — Libero cover behind."</strong>',
+      'right':        '<strong>RB pushes up to close the ball wide</strong> in the middle third. Stopper shifts right — second defender. LB tucks in. <strong>Libero holds central behind the three.</strong> Cue: <strong>"Push up and hold shape. Libero — read the space."</strong>'
+    },
+    defensive: {
+      'left':         '<strong>LB is first defender on the ball</strong> in our defensive third. Stopper covers inside — no pass through. RB pinches in tight. <strong>Libero is goal-side, protecting space behind all three.</strong> Cue: <strong>"No space behind. Libero — protect the goal."</strong>',
+      'left-center':  '<strong>Stopper steps to challenge</strong> in our defensive third. LB stays tight. RB closes the gap. <strong>Libero is last defender — goal-side, nothing gets through.</strong> Cue: <strong>"Stopper step — Libero, no space behind."</strong>',
+      'center':       '<strong>Stopper challenges the ball centrally</strong> in our third. LB and RB are tight — no space wide. <strong>Libero is directly behind, last line of defense.</strong> Cue: <strong>"Compact. No gaps. Libero anchors."</strong>',
+      'right-center': '<strong>Stopper steps to challenge</strong> in our defensive third. RB stays tight. LB closes. <strong>Libero is last defender — goal-side.</strong> Cue: <strong>"Stopper step — Libero, no space behind."</strong>',
+      'right':        '<strong>RB is first defender on the ball</strong> in our defensive third. Stopper covers inside. LB pinches in tight. <strong>Libero is goal-side, protecting space behind all three.</strong> Cue: <strong>"No space behind. Libero — protect the goal."</strong>'
+    }
+  },
+  midfield: {
+    attacking: {
+      'left':         '<strong>CM-L presses aggressively</strong> toward the ball. CM-C shifts to cover the central lane. <strong>CM-R tucks in sharply</strong> — denies the switch. Cue: <strong>"Near presses, center covers, far tucks."</strong>',
+      'left-center':  '<strong>CM-L steps up to press.</strong> CM-C covers centrally. <strong>CM-R tucks in</strong> to deny the switch right. Cue: <strong>"Near presses, center covers, far tucks."</strong>',
+      'center':       '<strong>CM-C steps up to pressure.</strong> CM-L and CM-R hold even width — flat line, all lanes closed. Cue: <strong>"Hold shape, CM-C leads, wings connected."</strong>',
+      'right-center': '<strong>CM-R steps up to press.</strong> CM-C covers centrally. <strong>CM-L tucks in</strong> to deny the switch left. Cue: <strong>"Near presses, center covers, far tucks."</strong>',
+      'right':        '<strong>CM-R presses aggressively</strong> toward the ball. CM-C shifts to cover the central lane. <strong>CM-L tucks in sharply</strong> — denies the switch. Cue: <strong>"Near presses, center covers, far tucks."</strong>'
+    },
+    midfield: {
+      'left':         '<strong>CM-L battles for the ball wide in midfield.</strong> CM-C shifts left to cover the center. <strong>CM-R tucks in</strong> — deny the switch. Contest everything in the middle third. Cue: <strong>"Win it in midfield — near battles, far tucks."</strong>',
+      'left-center':  '<strong>CM-L steps to contest</strong> in the left-central channel. CM-C covers the center. <strong>CM-R tucks in.</strong> Cue: <strong>"Near battles, center covers, far tucks."</strong>',
+      'center':       '<strong>CM-C steps to contest centrally.</strong> CM-L and CM-R hold even width — flat line. <strong>Compete for every ball in the middle third.</strong> Cue: <strong>"CM-C wins it — wings hold width."</strong>',
+      'right-center': '<strong>CM-R steps to contest</strong> in the right-central channel. CM-C covers the center. <strong>CM-L tucks in.</strong> Cue: <strong>"Near battles, center covers, far tucks."</strong>',
+      'right':        '<strong>CM-R battles for the ball wide in midfield.</strong> CM-C shifts right to cover the center. <strong>CM-L tucks in</strong> — deny the switch. Cue: <strong>"Win it in midfield — near battles, far tucks."</strong>'
+    },
+    defensive: {
+      'left':         '<strong>CM-L drops to track the wide runner</strong> into our defensive third. CM-C covers the center. <strong>CM-R tucks in tight.</strong> Mids form a wall in front of the defense. Cue: <strong>"Drop and cover — no gaps in front of the defense."</strong>',
+      'left-center':  '<strong>CM-L drops to block the left-central lane.</strong> CM-C covers centrally. <strong>CM-R tucks in.</strong> Compact block — protect the space in front of the back four. Cue: <strong>"Get behind the ball — no space to exploit."</strong>',
+      'center':       '<strong>CM-C drops to block centrally.</strong> CM-L and CM-R hold wide — no gaps. <strong>Tight wall in front of the defense.</strong> Cue: <strong>"Compact. No gaps. Wall in front of defense."</strong>',
+      'right-center': '<strong>CM-R drops to block the right-central lane.</strong> CM-C covers centrally. <strong>CM-L tucks in.</strong> Protect the space in front of the back four. Cue: <strong>"Get behind the ball — no space to exploit."</strong>',
+      'right':        '<strong>CM-R drops to track the wide runner</strong> into our defensive third. CM-C covers the center. <strong>CM-L tucks in tight.</strong> Mids form a wall in front of the defense. Cue: <strong>"Drop and cover — no gaps in front of the defense."</strong>'
+    }
+  },
+  forwards: {
+    attacking: {
+      'left':         '<strong>LW presses the ball</strong> high in the opponent\'s half. ST shifts to cut the central lane. <strong>RW drops and tucks in</strong> — denies the switch. Cue: <strong>"Ball near, press. Ball far, drop."</strong>',
+      'left-center':  '<strong>LW presses.</strong> ST narrows to close the central pass. <strong>RW tucks in</strong> — denies the switch, forces play backward. Cue: <strong>"Ball near, press. Ball far, drop."</strong>',
+      'center':       '<strong>ST leads the press centrally.</strong> LW and RW narrow symmetrically — no space in the middle. Cue: <strong>"ST leads, wings narrow, force it back."</strong>',
+      'right-center': '<strong>RW presses.</strong> ST narrows to close the central pass. <strong>LW tucks in</strong> — denies the switch. Cue: <strong>"Ball near, press. Ball far, drop."</strong>',
+      'right':        '<strong>RW presses the ball</strong> high in the opponent\'s half. ST shifts to cut the central lane. <strong>LW drops and tucks in</strong> — denies the switch. Cue: <strong>"Ball near, press. Ball far, drop."</strong>'
+    },
+    midfield: {
+      'left':         '<strong>LW drops to the midfield line</strong> and presses the ball. ST drops central — deny the pass through. <strong>RW tucks in.</strong> First line of defensive pressure from midfield. Cue: <strong>"Drop to the line — near presses, far tucks."</strong>',
+      'left-center':  '<strong>LW drops and presses</strong> in the left-central channel from the midfield line. ST closes the central lane. <strong>RW tucks in.</strong> Cue: <strong>"Drop to the line — near presses, far tucks."</strong>',
+      'center':       '<strong>ST drops to the midfield line</strong> and contests centrally. LW and RW tuck in — compact line. <strong>No space through the center.</strong> Cue: <strong>"Drop to the line — ST leads, wings narrow."</strong>',
+      'right-center': '<strong>RW drops and presses</strong> in the right-central channel from the midfield line. ST closes the central lane. <strong>LW tucks in.</strong> Cue: <strong>"Drop to the line — near presses, far tucks."</strong>',
+      'right':        '<strong>RW drops to the midfield line</strong> and presses the ball. ST drops central. <strong>LW tucks in.</strong> First line of defensive pressure from midfield. Cue: <strong>"Drop to the line — near presses, far tucks."</strong>'
+    },
+    defensive: {
+      'left':         '<strong>LW tracks all the way back</strong> into the defensive third — goal-side of her runner. ST drops to block central passes. <strong>RW tracks back on the right side.</strong> Full team behind the ball. Cue: <strong>"Track every runner — we defend together."</strong>',
+      'left-center':  '<strong>LW tracks the ball-side runner</strong> deep into our defensive third. ST drops to block the central pass. <strong>RW tucks in</strong> to deny the switch. Cue: <strong>"All the way back — no free runners."</strong>',
+      'center':       '<strong>ST drops centrally</strong> in our defensive third to block passing lanes. LW and RW track their runners. <strong>Compact unit in front of the midfield.</strong> Cue: <strong>"Track every runner — we defend together."</strong>',
+      'right-center': '<strong>RW tracks the ball-side runner</strong> deep into our defensive third. ST drops to block the central pass. <strong>LW tucks in.</strong> Cue: <strong>"All the way back — no free runners."</strong>',
+      'right':        '<strong>RW tracks all the way back</strong> into the defensive third — goal-side of her runner. ST drops centrally. <strong>LW tracks back on the left side.</strong> Full team behind the ball. Cue: <strong>"Track every runner — we defend together."</strong>'
+    }
+  }
+};
+
+const LEGEND_ITEMS = {
+  defense:  [{color:'#8f1a1a',border:'2.5px solid #c8a84b',label:'Stopper'},{color:'#1a5c3a',border:'2px solid white',label:'Libero'},{color:'#1a3a8f',border:'2px solid white',label:'Outside Back'}],
+  midfield: [{color:'#1a3a8f',border:'2px solid white',label:'Central Mid'}],
+  forwards: [{color:'#b8860b',border:'2px solid #c8a84b',label:'Forward'}],
+  shared:   [{color:'rgba(224,92,92,.85)',border:'1px solid white',label:'Attacker'}]
+};
+
+// ── STATE ──────────────────────────────────────
+let activeUnits = new Set(['defense', 'midfield', 'forwards']);
+let currentZone = 'defensive';
+let currentBall = 'right';
+let animFrame   = null;
+let startTime   = null;
+let livePos     = null;
+const DUR = 380;
+
+// ── HELPERS ────────────────────────────────────
+function lerp(a, b, t) { return a + (b - a) * t; }
+function setEl(id, attr, val) { const e = document.getElementById(id); if (e) e.setAttribute(attr, val); }
+
+function getFullPos(zone, ball) {
+  const d = DEF_POS[zone][ball], m = MID_POS[zone][ball], f = FWD_POS[zone][ball];
+  return {
+    ball:{...BALL_POS[zone][ball]},
+    dA:{...d.dA},dB:{...d.dB},dC:{...d.dC},dD:{...d.dD},
+    mA:{...m.mA},mB:{...m.mB},mC:{...m.mC},
+    fA:{...f.fA},fB:{...f.fB},fC:{...f.fC}
+  };
+}
+
+function setPlayer(k, p) {
+  setEl(k+'-shadow','cx',p.x+1); setEl(k+'-shadow','cy',p.y+1);
+  setEl(k,'cx',p.x); setEl(k,'cy',p.y);
+  setEl(k+'-lbl','x',p.x); setEl(k+'-lbl','y',p.y+3.5);
+}
+
+function drawArrow(id, from, to) {
+  const dx=to.x-from.x, dy=to.y-from.y, d=Math.sqrt(dx*dx+dy*dy);
+  if (d > 22) {
+    setEl(id,'x1',from.x+dx*14/d); setEl(id,'y1',from.y+dy*14/d);
+    setEl(id,'x2',from.x+dx*(d-16)/d); setEl(id,'y2',from.y+dy*(d-16)/d);
+  } else { setEl(id,'x1',0);setEl(id,'y1',0);setEl(id,'x2',0);setEl(id,'y2',0); }
+}
+function clearArrow(id) { setEl(id,'x1',0);setEl(id,'y1',0);setEl(id,'x2',0);setEl(id,'y2',0); }
+
+// ── APPLY POSITIONS ────────────────────────────
+function applyPos(pos) {
+  livePos = JSON.parse(JSON.stringify(pos));
+  const b = pos.ball;
+  ['ball','ball-inner','att-ring'].forEach(id=>{setEl(id,'cx',b.x);setEl(id,'cy',b.y);});
+  setEl('att','cx',b.x);setEl('att','cy',b.y);setEl('att-lbl','x',b.x);setEl('att-lbl','y',b.y+3.5);
+
+  ['dA','dB','dC','dD','mA','mB','mC','fA','fB','fC'].forEach(k=>setPlayer(k,pos[k]));
+
+  const defOn=activeUnits.has('defense'), midOn=activeUnits.has('midfield'), fwdOn=activeUnits.has('forwards');
+  ['grp-dA','grp-dB','grp-dC','grp-dD'].forEach(id=>document.getElementById(id).style.display=defOn?'':'none');
+  ['grp-mA','grp-mB','grp-mC'].forEach(id=>document.getElementById(id).style.display=midOn?'':'none');
+  ['grp-fA','grp-fB','grp-fC'].forEach(id=>document.getElementById(id).style.display=fwdOn?'':'none');
+  document.getElementById('def-lines').style.display=defOn?'':'none';
+  document.getElementById('mid-lines').style.display=midOn?'':'none';
+  document.getElementById('fwd-lines').style.display=fwdOn?'':'none';
+
+  if (defOn) {
+    const {dA,dB,dC,dD}=pos;
+    setEl('dl-1','x1',dA.x);setEl('dl-1','y1',dA.y);setEl('dl-1','x2',dB.x);setEl('dl-1','y2',dB.y);
+    setEl('dl-2','x1',dB.x);setEl('dl-2','y1',dB.y);setEl('dl-2','x2',dC.x);setEl('dl-2','y2',dC.y);
+    setEl('dl-3','x1',dA.x);setEl('dl-3','y1',dA.y);setEl('dl-3','x2',dD.x);setEl('dl-3','y2',dD.y);
+    setEl('dl-4','x1',dC.x);setEl('dl-4','y1',dC.y);setEl('dl-4','x2',dD.x);setEl('dl-4','y2',dD.y);
+    setEl('dl-5','x1',dB.x);setEl('dl-5','y1',dB.y);setEl('dl-5','x2',dD.x);setEl('dl-5','y2',dD.y);
+  }
+  if (midOn) {
+    const {mA,mB,mC}=pos;
+    setEl('ml-1','x1',mA.x);setEl('ml-1','y1',mA.y);setEl('ml-1','x2',mB.x);setEl('ml-1','y2',mB.y);
+    setEl('ml-2','x1',mB.x);setEl('ml-2','y1',mB.y);setEl('ml-2','x2',mC.x);setEl('ml-2','y2',mC.y);
+  }
+  if (fwdOn) {
+    const {fA,fB,fC}=pos;
+    setEl('fl-1','x1',fA.x);setEl('fl-1','y1',fA.y);setEl('fl-1','x2',fB.x);setEl('fl-1','y2',fB.y);
+    setEl('fl-2','x1',fB.x);setEl('fl-2','y1',fB.y);setEl('fl-2','x2',fC.x);setEl('fl-2','y2',fC.y);
+  }
+
+  if (defOn) drawArrow('press-d', pos[DEF_POS[currentZone][currentBall].pressFrom], b); else clearArrow('press-d');
+  if (midOn) drawArrow('press-m', pos[MID_POS[currentZone][currentBall].pressFrom], b); else clearArrow('press-m');
+  if (fwdOn) drawArrow('press-f', pos[FWD_POS[currentZone][currentBall].pressFrom], b); else clearArrow('press-f');
+}
+
+// ── LEGEND & DESCRIPTION ───────────────────────
+function renderLegend() {
+  const items=[];
+  if(activeUnits.has('defense'))  items.push(...LEGEND_ITEMS.defense);
+  if(activeUnits.has('midfield')) items.push(...LEGEND_ITEMS.midfield);
+  if(activeUnits.has('forwards')) items.push(...LEGEND_ITEMS.forwards);
+  items.push(...LEGEND_ITEMS.shared);
+  document.getElementById('legend').innerHTML=items.map(i=>`<div class="legend-item"><div class="legend-dot" style="background:${i.color};border:${i.border}"></div>${i.label}</div>`).join('');
+}
+
+function updateDescription() {
+  const order=['forwards','midfield','defense'];
+  const active=order.filter(u=>activeUnits.has(u));
+  document.getElementById('desc-box').innerHTML=active.length===0
+    ?'<div class="desc-unit"><p style="color:#555">Select a unit above.</p></div>'
+    :active.map(u=>`<div class="desc-unit"><h3>${u.charAt(0).toUpperCase()+u.slice(1)}</h3><p>${DESCRIPTIONS[u][currentZone][currentBall]}</p></div>`).join('');
+}
+
+// ── ANIMATE ────────────────────────────────────
+function animateTo(zone, ball) {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  const from = livePos || getFullPos(currentZone, currentBall);
+  const to   = getFullPos(zone, ball);
+  startTime  = performance.now();
+  function step(now) {
+    const t=Math.min((now-startTime)/DUR,1), e=t<.5?2*t*t:-1+(4-2*t)*t;
+    const pos={};
+    ['ball','dA','dB','dC','dD','mA','mB','mC','fA','fB','fC'].forEach(k=>{
+      pos[k]={x:lerp(from[k].x,to[k].x,e),y:lerp(from[k].y,to[k].y,e)};
+    });
+    applyPos(pos);
+    if(t<1) animFrame=requestAnimationFrame(step);
+    else { applyPos(to); animFrame=null; }
+  }
+  animFrame=requestAnimationFrame(step);
+}
+
+// ── PUBLIC SETTERS ─────────────────────────────
+function toggleUnit(unit) {
+  if(animFrame){cancelAnimationFrame(animFrame);animFrame=null;}
+  activeUnits.has(unit)?activeUnits.delete(unit):activeUnits.add(unit);
+  document.querySelectorAll('.unit-btn').forEach(btn=>{
+    btn.classList.toggle('active',activeUnits.has(btn.textContent.toLowerCase().trim()));
+  });
+  applyPos(livePos||getFullPos(currentZone,currentBall));
+  renderLegend(); updateDescription();
+}
+
+function setZone(zone) {
+  document.querySelectorAll('#zone-tabs .tab').forEach((t,i)=>{
+    t.classList.toggle('active',['attacking','midfield','defensive'][i]===zone);
+  });
+  currentZone=zone; updateDescription(); animateTo(zone,currentBall);
+}
+
+function setBall(ball) {
+  document.querySelectorAll('#lane-tabs .tab').forEach((t,i)=>{
+    t.classList.toggle('active',['left','left-center','center','right-center','right'][i]===ball);
+  });
+  currentBall=ball; updateDescription(); animateTo(currentZone,ball);
+}
+
+// ── DRAG ───────────────────────────────────────
+let dragKey=null, dragOffset={x:0,y:0};
+function svgPoint(e){
+  const svg=document.querySelector('svg.field'),pt=svg.createSVGPoint(),src=e.touches?e.touches[0]:e;
+  pt.x=src.clientX;pt.y=src.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+function initDrag(){
+  const svg=document.querySelector('svg.field');
+  svg.addEventListener('pointermove',e=>{
+    if(!dragKey)return; e.preventDefault();
+    const pt=svgPoint(e),pos=JSON.parse(JSON.stringify(livePos||getFullPos(currentZone,currentBall)));
+    const nx=Math.max(12,Math.min(288,pt.x-dragOffset.x)),ny=Math.max(12,Math.min(408,pt.y-dragOffset.y));
+    if(dragKey==='ball') pos.ball={x:nx,y:ny}; else pos[dragKey]={x:nx,y:ny};
+    applyPos(pos);
+  },{passive:false});
+  svg.addEventListener('pointerup',()=>dragKey=null);
+  svg.addEventListener('pointercancel',()=>dragKey=null);
+  document.querySelectorAll('[data-drag]').forEach(el=>{
+    el.addEventListener('pointerdown',e=>{
+      if(animFrame){cancelAnimationFrame(animFrame);animFrame=null;}
+      e.preventDefault(); svg.setPointerCapture(e.pointerId);
+      dragKey=e.currentTarget.dataset.drag;
+      const pt=svgPoint(e),cur=livePos||getFullPos(currentZone,currentBall);
+      const ref=dragKey==='ball'?cur.ball:cur[dragKey];
+      dragOffset={x:pt.x-ref.x,y:pt.y-ref.y};
+    },{passive:false});
+  });
+}
+
+// ── OVERLAYS ───────────────────────────────────
+function toggleOverlay(id, on) { document.getElementById(id).setAttribute('display', on?'':'none'); }
+
+// ── INIT ───────────────────────────────────────
+applyPos(getFullPos('defensive','right'));
+renderLegend(); updateDescription(); initDrag();
+</script>
+</body>
+</html>
