@@ -1,0 +1,50 @@
+# ─── Data ────────────────────────────────────────────────────────────────────
+# Keep directories in version control, but ignore their contents.
+data/videos/*
+!data/videos/.gitkeep
+
+# ─── Output ──────────────────────────────────────────────────────────────────
+output/reports/*
+!output/reports/.gitkeep
+
+# ─── sn-gamestate: large binary assets & generated runs ──────────────────────
+# sn-gamestate is vendored from https://github.com/SoccerNet/sn-gamestate
+# Local modifications live in sn-gamestate/sn_gamestate/calibration/ and ARE tracked.
+
+# Pretrained model weights (~1.1 GB total — download separately per README)
+sn-gamestate/pretrained_models/
+
+# Evaluation fixture zip (~66 MB)
+sn-gamestate/examples_predictions/
+
+# Hydra / TrackLab dated run outputs
+sn-gamestate/outputs/
+
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Catch-all for model weight files that might land outside pretrained_models/
+*.pt
+*.pth
+*.pth.tar
+
+# ─── Virtual environments ────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ─── macOS ───────────────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+
+# ─── IDE ─────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+

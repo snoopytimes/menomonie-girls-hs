@@ -1,0 +1,49 @@
+# Soccer Analyst Configuration
+# ============================
+
+# Team settings
+team:
+  home_color: "maroon"        # Primary jersey color for home team (used for color clustering)
+  home_color_hsv_range:       # HSV range for jersey detection (tuned for maroon)
+    lower: [0, 80, 40]
+    upper: [15, 255, 180]
+  home_label: "Menomonie"
+  away_label: "Opponent"
+
+# Video processing
+video:
+  frame_sample_rate: 2        # Frames per second to extract (lower = faster, less granular)
+  max_resolution: 1920        # Downscale frames wider than this (pixels)
+  output_format: "jpg"        # Frame output format (jpg or png)
+  jpeg_quality: 85            # JPEG quality (1-100, only used if output_format is jpg)
+
+# SoccerNet GSR settings
+tracker:
+  sn_gamestate_dir: "sn-gamestate"  # Path to cloned sn-gamestate repo
+  confidence_threshold: 0.5         # Minimum detection confidence
+  batch_size: 8                     # Batch size for YOLO detector (lower if OOM)
+  max_frames: 5000                  # Max frames to process (-1 for all). 5000 frames ~= 2.5 min at 30fps
+  enable_jersey_ocr: true          # Requires full mmcv (not mmcv-lite). Maps track IDs to jersey numbers.
+  # NOTE: SoccerNet GSR was trained on broadcast footage. Fixed sideline camera
+  # footage may produce lower-quality homography estimates. Consider fine-tuning
+  # the homography module on sideline footage for better results.
+
+# Tactical analysis parameters
+tactics:
+  pressing_distance_threshold: 10.0  # Meters — players within this distance of ball are "pressing"
+  pressing_time_window: 3.0          # Seconds — window to measure pressing intensity
+  formation_snapshot_events:          # When to capture formation shape
+    - "kickoff"
+    - "goal_kick"
+    - "corner"
+    - "transition"
+  heatmap_resolution: 105            # Grid cells along pitch length (width scales proportionally)
+  pitch_length: 105.0                # Pitch dimensions in meters (FIFA standard)
+  pitch_width: 68.0
+
+# Output settings
+output:
+  report_dir: "output/reports"
+  heatmap_colormap: "YlOrRd"         # Matplotlib colormap for heatmaps
+  figure_dpi: 150
+  save_csv: true                     # Also export raw data as CSV
