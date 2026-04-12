@@ -11,19 +11,59 @@ Local tactical analysis tool for high school soccer. Processes game footage (MP4
 ## Setup
 
 ```bash
-# 1. Install dependencies with uv
+# 1. Clone this repo with submodules (pulls sn-gamestate fork automatically)
+git clone --recurse-submodules git@github.com:snoopytimes/menomonie-girls-hs.git
+cd menomonie-girls-hs/soccer-analyst
+
+# If you already cloned without --recurse-submodules, initialize it manually:
+git submodule update --init --recursive
+
+# 2. Install dependencies with uv
 uv sync
 
-# 2. Install SoccerNet GSR (player detection, tracking, and homography)
-uv pip install soccernet
-git clone https://github.com/SoccerNet/sn-gamestate.git
+# 3. Install sn-gamestate in editable mode
 cd sn-gamestate
 uv pip install -e .
 cd ..
 
-# 3. Download SoccerNet GSR model weights
-# Follow the instructions in the sn-gamestate README to download
-# pre-trained weights and place them in models/sn-gsr/
+# 4. Download SoccerNet GSR model weights (~1.1 GB)
+# Follow the instructions in sn-gamestate/README.md and place weights in:
+#   sn-gamestate/pretrained_models/
+```
+
+## sn-gamestate Submodule
+
+`sn-gamestate/` is a Git submodule pointing to a fork of [SoccerNet/sn-gamestate](https://github.com/SoccerNet/sn-gamestate)
+with local calibration patches applied. The fork lives at `github.com:snoopytimes/sn-gamestate`.
+
+**Making changes to sn-gamestate (e.g. calibration files):**
+
+```bash
+cd sn-gamestate
+# edit files, then:
+git add sn_gamestate/calibration/baseline.py
+git commit -m "fix: adjust homography for sideline camera"
+git push origin main
+
+# update the pointer in the parent repo
+cd ..
+git add sn-gamestate
+git commit -m "bump sn-gamestate submodule"
+git push origin main
+```
+
+**Pulling upstream updates from SoccerNet:**
+
+```bash
+cd sn-gamestate
+git fetch upstream
+git merge upstream/main      # merge SoccerNet's latest into your fork
+git push origin main
+
+cd ..
+git add sn-gamestate
+git commit -m "sync sn-gamestate with upstream"
+git push origin main
 ```
 
 ## Usage

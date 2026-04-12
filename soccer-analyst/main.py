@@ -1,3 +1,4 @@
+import utils.session
 def main():
     print("Hello from soccer-analyst!")
 
