@@ -1,0 +1,3 @@
+[submodule "soccer-analyst/sn-gamestate"]
+	path = soccer-analyst/sn-gamestate
+	url = git@github.com:snoopytimes/sn-gamestate.git

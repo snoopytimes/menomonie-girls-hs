@@ -7,18 +7,10 @@ data/videos/*
 output/reports/*
 !output/reports/.gitkeep
 
-# ─── sn-gamestate: large binary assets & generated runs ──────────────────────
-# sn-gamestate is vendored from https://github.com/SoccerNet/sn-gamestate
-# Local modifications live in sn-gamestate/sn_gamestate/calibration/ and ARE tracked.
-
-# Pretrained model weights (~1.1 GB total — download separately per README)
-sn-gamestate/pretrained_models/
-
-# Evaluation fixture zip (~66 MB)
-sn-gamestate/examples_predictions/
-
-# Hydra / TrackLab dated run outputs
-sn-gamestate/outputs/
+# ─── sn-gamestate (git submodule) ────────────────────────────────────────────
+# Tracked as a submodule → fork at github.com:snoopytimes/sn-gamestate
+# Upstream: https://github.com/SoccerNet/sn-gamestate
+# Submodule contents are never staged in this repo; only the commit pointer is.
 
 # ─── Python ──────────────────────────────────────────────────────────────────
 __pycache__/
